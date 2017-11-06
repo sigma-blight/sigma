@@ -57,6 +57,10 @@ runner "mkdir $INC_DIR"
 runner "mkdir $BUILD_DIR"
 runner "mkdir $CLONE_DIR"
 
+# Create needed bin folder
+runner "rm -rf $DEPS_DIR/../bin"
+runner "mkdir $DEPS_DIR/../bin"
+
 #####################################################################
 
 inform "Installing Google Test"
