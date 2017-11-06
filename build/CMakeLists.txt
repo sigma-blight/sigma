@@ -33,6 +33,7 @@ set(COMPILER_SRC_DIR "${APPS_DIR}/compiler")
 file(GLOB BENCHER_SRCS "${BENCHER_SRC_DIR}/*.cpp")
 file(GLOB TESTER_SRCS "${TESTER_SRC_DIR}/*.cpp")
 file(GLOB COMPILER_SRCS "${COMPILER_SRC_DIR}/*.cpp")
+file(GLOB_RECURSE LIBRARY_SRCS "${SRC_DIR}/*.cpp")
 
 # Library setup
 include_directories(${DEPS_INC_DIR})
@@ -43,24 +44,50 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
+# Create library
+if ("${LIBRARY_SRCS}" STREQUAL "")
+    message("Library contains no source files")
+else()
+    message("Building library")
+    add_library(library STATIC ${LIBRARY_SRCS})
+endif()
+
 # Build
 if (${BUILD_BENCHER})
-    find_package(Threads)
-    add_executable(bencher ${BENCHER_SRCS})
-    target_link_libraries(bencher
-            benchmark
-            ${CMAKE_THREAD_LIBS_INIT})
+    if ("${BENCHER_SRCS}" STREQUAL "")
+        message("Bencher contains no source files")
+    else()
+        message("Building bencher")
+        find_package(Threads)
+        add_executable(bencher ${BENCHER_SRCS})
+        target_link_libraries(bencher
+                benchmark
+                ${CMAKE_THREAD_LIBS_INIT}
+                library)
+    endif()
 endif ()
 
 if (${BUILD_TESTER})
-    find_package(Threads)
-    add_executable(tester ${TESTER_SRCS})
-    target_link_libraries(tester
-            gtest gtest_main
-            gmock gmock_main
-            ${CMAKE_THREAD_LIBS_INIT})
+    if ("${TESTER_SRCS}" STREQUAL "")
+        message("Tester contains no source files")
+    else()
+        message("Building tester")
+        find_package(Threads)
+        add_executable(tester ${TESTER_SRCS})
+        target_link_libraries(tester
+                gtest gtest_main
+                gmock gmock_main
+                ${CMAKE_THREAD_LIBS_INIT}
+                library)
+    endif()
 endif ()
 
 if (${BUILD_COMPILER})
-    add_executable(compiler ${COMPILER_SRCS})
+    if ("${COMPILER_SRCS}" STREQUAL "")
+        message("Compiler contains no source files")
+    else()
+        message("Building compiler")
+        add_executable(compiler ${COMPILER_SRCS})
+        target_link_libraries(library)
+    endif()
 endif()
