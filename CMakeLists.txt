@@ -10,8 +10,8 @@ option(BUILD_TESTER "BUILD_TESTER" ON)
 option(BUILD_COMPILER "BUILD_COMPILER" ON)
 
 # C++ setup
-set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
+	-std=c++1y							\
     -O3                                 \
     -Wall                               \
     -pedantic                           \
@@ -38,6 +38,7 @@ file(GLOB_RECURSE LIBRARY_SRCS "${SRC_DIR}/*.cpp")
 # Library setup
 include_directories(${DEPS_INC_DIR})
 link_directories(${DEPS_LIB_DIR})
+include_directories(${SRC_DIR})
 
 # Binary output
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
@@ -51,12 +52,13 @@ if ("${LIBRARY_SRCS}" STREQUAL "")
 else()
     message("Building library")
     add_library(library STATIC ${LIBRARY_SRCS})
+	link_directories(${CMAKE_SOURCE_DIR}/lib)
 	set(LIBRARY_BUILT true)
 endif()
 
 function(link_library target)
-	if ($LIBRARY_BUILT)
-		target_link_libraries($target library)
+	if (${LIBRARY_BUILT})
+		target_link_libraries(${target} library)
 	endif()
 endfunction()
 
