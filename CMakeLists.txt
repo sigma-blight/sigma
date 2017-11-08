@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.0)
 
 # Apps
 project(bencher)
@@ -47,10 +47,18 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 # Create library
 if ("${LIBRARY_SRCS}" STREQUAL "")
     message("Library contains no source files")
+	set(LIBRARY_BUILT false)
 else()
     message("Building library")
     add_library(library STATIC ${LIBRARY_SRCS})
+	set(LIBRARY_BUILT true)
 endif()
+
+function(link_library target)
+	if ($LIBRARY_BUILT)
+		target_link_libraries($target library)
+	endif()
+endfunction()
 
 # Build
 if (${BUILD_BENCHER})
@@ -62,8 +70,8 @@ if (${BUILD_BENCHER})
         add_executable(bencher ${BENCHER_SRCS})
         target_link_libraries(bencher
                 benchmark
-                ${CMAKE_THREAD_LIBS_INIT}
-                library)
+                ${CMAKE_THREAD_LIBS_INIT})
+		link_library(bencher)
     endif()
 endif ()
 
@@ -77,8 +85,8 @@ if (${BUILD_TESTER})
         target_link_libraries(tester
                 gtest gtest_main
                 gmock gmock_main
-                ${CMAKE_THREAD_LIBS_INIT}
-                library)
+                ${CMAKE_THREAD_LIBS_INIT})
+		link_library(tester)
     endif()
 endif ()
 
@@ -88,6 +96,6 @@ if (${BUILD_COMPILER})
     else()
         message("Building compiler")
         add_executable(compiler ${COMPILER_SRCS})
-        target_link_libraries(library)
+		link_library(compiler)
     endif()
 endif()
