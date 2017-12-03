@@ -284,7 +284,15 @@ def build_project(project, cmd_args):
         exit(-1)
 
 
+def setup_dirs():
+    if not os.path.exists(get_library_lib_dir()):
+        os.makedirs(get_library_lib_dir())
+    if not os.path.exists(get_bin_dir()):
+        os.makedirs(get_bin_dir())
+
+
 if __name__ == "__main__":
     cmd_args = CMDArgs(len(sys.argv), sys.argv)
     project = cmd_args.get_project()
+    setup_dirs()
     build_project(project, cmd_args)
