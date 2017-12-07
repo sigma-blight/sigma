@@ -1,95 +1,39 @@
-# Setup
+execute() {
+    echo "$1"
+    $1
+    if [ $? -ne 0 ]; then
+        printf "\n** FAILED **\n"
+        exit $?
+    fi
+}
 
 ORG_DIR=$PWD
-DEPS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+INSTALL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 FILE_NAME=`basename "$0"`
-CPU_CORES="$(grep -c ^processor /proc/cpuinfo)"
-LIB_DIR="$DEPS_DIR/lib"
-INC_DIR="$DEPS_DIR/include"
-BUILD_DIR="$DEPS_DIR/build"
-CLONE_DIR="$DEPS_DIR/clone"
+UTIL_SCRIPTS_DIR="$INSTALL_DIR/.tmp.util_scripts"
+UTIL_SCRIPTS_REPO="https://github.com/sigma-blight/utility_scripts.git"
+INSTALL_GOOGLE_SCRIPT_DIR="$UTIL_SCRIPTS_DIR/utility_scripts/install"
+SRC_DIR="$INSTALL_DIR/src"
+LIB_DIR="$INSTALL_DIR/lib"
+INC_DIR="$INSTALL_DIR/include"
 
-function inform {
-	echo "Install Log: $1"
-}
+# Directory Setup
+execute "rm -rf $UTIL_SCRIPTS_DIR"
+execute "mkdir $UTIL_SCRIPTS_DIR"
+execute "mkdir $SRC_DIR"
+execute "mkdir $LIB_DIR"
+execute "mkdir $INC_DIR"
 
-function runner {
-	inform "Running: $1"
-	$1
-	if [ $? -ne 0 ]; then
-		inform "Failed to Run: $1"
-		exit $?
-	fi
-}
+# Build Google Framework
+execute "cd $UTIL_SCRIPTS_DIR"
+execute "git clone $UTIL_SCRIPTS_REPO"
+execute "$INSTALL_GOOGLE_SCRIPT_DIR/./google_framework.sh $SRC_DIR"
 
-function enter_dir {
-	inform "Entering $1"
-	runner "cd $1"
-}
+# Copy Libs and Headers
+execute "cp -rf $SRC_DIR/gtest_lib/* $LIB_DIR/"
+execute "cp -rf $SRC_DIR/gbench_lib/* $LIB_DIR/"
+execute "cp -rf $SRC_DIR/gtest_include/* $INC_DIR/"
+execute "cp -rf $SRC_DIR/gbench_include/* $INC_DIR/"
 
-function cloner {
-	inform "Cloning $1"
-	enter_dir $CLONE_DIR
-	runner "git clone $1"
-}
-
-function builder {
-	inform "Making $1"
-	runner "rm -rf $BUILD_DIR/*"
-	enter_dir $BUILD_DIR
-	runner "cmake $1 -DCMAKE_BUILD_TYPE=Release"
-	runner "make -j $CPU_CORES"
-}
-
-if [ "$ORG_DIR" != "$DEPS_DIR" ]; then
-	enter_dir $DEPS_DIR
-fi
-
-inform "Cleaning Directory $DEPS_DIR"
-for i in $(ls); do
-	if [ "$FILE_NAME" != "$i" ]; then
-		runner "rm -rf $i"
-	fi
-done
-
-runner "mkdir $LIB_DIR"
-runner "mkdir $INC_DIR"
-runner "mkdir $BUILD_DIR"
-runner "mkdir $CLONE_DIR"
-
-#####################################################################
-
-inform "Installing Google Test"
-cloner "https://github.com/google/googletest.git"
-
-GTEST_CLONE_DIR="$CLONE_DIR/googletest"
-GTEST_CLONE_GTEST="$GTEST_CLONE_DIR/googletest"
-GTEST_CLONE_GMOCK="$GTEST_CLONE_DIR/googlemock"
-
-builder $GTEST_CLONE_GTEST
-runner "cp $BUILD_DIR/*.a $LIB_DIR"
-runner "cp -rf $GTEST_CLONE_GTEST/include/* $INC_DIR"
-
-builder $GTEST_CLONE_GMOCK
-runner "cp $BUILD_DIR/*.a $LIB_DIR"
-runner "cp -rf $GTEST_CLONE_GMOCK/include/* $INC_DIR"
-
-inform "Installing Google Benchmark"
-cloner "https://github.com/google/benchmark.git"
-
-GBENCH_CLONE_DIR="$CLONE_DIR/benchmark"
-
-builder $GBENCH_CLONE_DIR
-runner "cp $BUILD_DIR/src/*.a $LIB_DIR"
-runner "cp -rf $GBENCH_CLONE_DIR/include/* $INC_DIR"
-
-
-######################################################################
-
-
-
-
-
-
-
-
+# Cleanup
+execute "rm -rf $UTIL_SCRIPTS_DIR"
