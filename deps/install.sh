@@ -7,9 +7,7 @@ execute() {
     fi
 }
 
-ORG_DIR=$PWD
 INSTALL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-FILE_NAME=`basename "$0"`
 UTIL_SCRIPTS_DIR="$INSTALL_DIR/.tmp.util_scripts"
 UTIL_SCRIPTS_REPO="https://github.com/sigma-blight/utility_scripts.git"
 INSTALL_GOOGLE_SCRIPT_DIR="$UTIL_SCRIPTS_DIR/utility_scripts/install"
