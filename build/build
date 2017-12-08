@@ -1,0 +1,52 @@
+#!/bin/bash
+
+BUILD_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
+ROOT_DIR="$BUILD_DIR/.."
+APPS_DIR="$ROOT_DIR/apps"
+DEPS_DIR="$ROOT_DIR/deps"
+BIN_DIR="$ROOT_DIR/bin"
+SRC_DIR="$ROOT_DIR/src"
+OBJ_DIR="$BIN_DIR/obj"
+
+COMPILER="g++"
+STD="-std=c++11"
+FLAGS="-O3 -Wall -Werror -pedantic"
+
+# Setup
+
+rm -rf "$OBJ_DIR"
+mkdir -p "$OBJ_DIR"
+
+# compile(.cpp_dir, output_file, extra)
+function compile()
+{
+    CPP_DIR=$1
+    OUTPUT_FILE=$2
+    EXTRA=$3
+    echo -e "\n$1 output to $BIN_DIR/$2 with: $3\n"
+    $COMPILER $STD $FLAGS               \
+        $(find "$OBJ_DIR" | grep ".o$") \
+        $(find "$CPP_DIR" | grep .cpp)  \
+        -o $OUTPUT_FILE -I $SRC_DIR $EXTRA
+}
+
+# Build Library
+
+cd "$OBJ_DIR"
+$COMPILER $STD $FLAGS $(find $SRC_DIR | grep .cpp) -c
+
+# Build Benchmark
+
+GBENCH_LIB="-lbenchmark -lpthread"
+
+compile "$APPS_DIR/bencher" "$BIN_DIR/bencher" "-I $DEPS_DIR/include -L $DEPS_DIR/lib $GBENCH_LIB"
+
+# Build Tests
+
+GTEST_LIB="-lgtest -lgtest_main -lgmock -lgmock_main -lpthread"
+
+compile "$APPS_DIR/tester" "$BIN_DIR/tester" "-I $DEPS_DIR/include -L $DEPS_DIR/lib $GTEST_LIB"
+
+# Compiler
+
+compile "$APPS_DIR/compiler" "$BIN_DIR/compiler"
